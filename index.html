@@ -12,8 +12,6 @@
     .focus-ring:focus-visible{outline:2px solid #facc15;outline-offset:2px}
     .card{border-radius:1rem;border:1px solid rgba(255,255,255,.08);background:#0c142b}
     .sub{border-radius:.75rem;border:1px solid rgba(255,255,255,.08);background:#0a1124}
-
-    /* Recast Application Workspace primitives */
     .logo-ring{width:2.1rem;height:2.1rem;border-radius:9999px;display:grid;place-items:center;background:#0a1226;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
     .logo-wrap{display:flex;align-items:center;gap:.4rem}
     .logo-name{font-size:.7rem;color:#cbd5e1;white-space:nowrap}
@@ -35,8 +33,6 @@
     .badge{width:1.15rem;height:1.15rem;border-radius:.3rem;opacity:0;transform:translateY(-6px) scale(.9)}
     .run .badge{animation:badgeDrop .8s ease-out var(--d,0s) forwards}
     @keyframes badgeDrop{to{opacity:1;transform:translateY(0) scale(1)}}
-
-    /* Nerdio Orchestration primitives */
     .pool{border-radius:.75rem;border:1px solid rgba(255,255,255,.12);background:#0b162d}
     .meter{height:.5rem;border-radius:.5rem;overflow:hidden;background:rgba(255,255,255,.06)}
     .bar{height:100%;transform:scaleX(0);transform-origin:left center}
@@ -48,16 +44,14 @@
 </head>
 <body class="min-h-screen bg-[#0b1020] text-slate-100 antialiased">
   <div id="app" class="min-h-screen"></div>
-
   <script>
     const STATE = {
-      tab: 'current', // 'current' | 'approach' | 'outcomes'
+      tab: 'current',
       showLabelsRecast: false,
       showLabelsNerdio: false,
       targets: { onboardingMins: 60, patchPct: 95, azureSavePct: 20, pkgHrsLow: 5, pkgHrsHigh: 10 },
       copied: false
     };
-
     function render(){
       const root=document.getElementById('app');
       root.innerHTML = `
@@ -75,14 +69,14 @@
               ${tabBtn('current','Current State','alert-circle')}
               ${tabBtn('approach','Approach (Nerdio+Recast)','workflow')}
               ${tabBtn('outcomes','Outcomes','bar-chart-3')}
+              ${STATE.tab==='approach' ? `
               <div class="ml-auto flex items-center gap-2">
                 <button type="button" class="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 focus-ring" data-action="start">Start</button>
                 <button type="button" class="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm focus-ring" data-action="reset">Reset</button>
-              </div>
+              </div>` : ''}
             </nav>
           </div>
         </header>
-
         <main class="mx-auto max-w-6xl px-4 pb-16">
           ${STATE.tab==='current'?renderCurrent():''}
           ${STATE.tab==='approach'?renderApproach():''}
@@ -93,15 +87,12 @@
       attachEvents();
       if (STATE.tab==='approach'){ buildRecast(); buildNerdio(); }
     }
-
     function tabBtn(id,label,icon){
       const active=STATE.tab===id;
       return `<button type="button" class="${active?'bg-yellow-400 text-slate-900':'text-slate-200 hover:bg-white/5'} inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm focus-ring" data-action="tab" data-id="${id}" aria-selected="${active}" aria-controls="panel-${id}">
         <i data-lucide="${icon}" class="w-4 h-4"></i><span>${label}</span>
       </button>`;
     }
-
-    /* ---------------- CURRENT STATE ---------------- */
     function renderCurrent(){
       return `
         <section id="panel-current" class="space-y-4">
@@ -117,16 +108,13 @@
               </span>
             </div>
           </div>
-
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
             ${problemTile('Fragmented Delivery','layout-grid','Images sprawl across AVD, W365, and on-prem; policy drift grows.')}
             ${problemTile('Packaging Backlog','boxes','Teams burn 5–10 hrs per app doing repeat work; migrations stall.')}
             ${problemTile('Zero-day Exposure','shield-alert','Third-party apps + OS images unpatched = risk window measured in days.')}
             ${problemTile('Slow Upgrades','gauge','Idle host pools and static capacity drive Azure overspend.')}
           </div>
-
           <p class="text-sm text-slate-300">Too many apps, too many versions — IT can’t keep up. Desktops and apps drift apart; security and cost suffer.</p>
-
           <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
             <article class="sub p-4">
               <div class="flex items-center gap-2"><i data-lucide="circle-help" class="h-5 w-5 text-sky-300"></i><h3 class="font-semibold">Why Change (the problem)</h3></div>
@@ -136,7 +124,6 @@
                 <li>Innovation waits — cloud, security, and AI adoption slows until desktops + apps are governed together.</li>
               </ul>
             </article>
-
             <article class="sub p-4">
               <div class="flex items-center gap-2"><i data-lucide="alarm-clock" class="h-5 w-5 text-amber-300"></i><h3 class="font-semibold">Why Now (the urgency)</h3></div>
               <ul class="mt-2 list-disc pl-5 text-sm text-slate-200">
@@ -145,7 +132,6 @@
                 <li>Do more with less — IT teams aren’t growing, but Azure spend is; automation is no longer optional.</li>
               </ul>
             </article>
-
             <article class="sub p-4">
               <div class="flex items-center gap-2"><i data-lucide="sparkles" class="h-5 w-5 text-emerald-300"></i><h3 class="font-semibold">Why Better Together (Recast + Nerdio)</h3></div>
               <ol class="mt-2 list-decimal pl-5 text-sm text-slate-200 space-y-2">
@@ -176,7 +162,6 @@
         </section>
       `;
     }
-
     function problemTile(title,icon,body){
       return `
         <article class="sub p-4">
@@ -188,8 +173,6 @@
         </article>
       `;
     }
-
-    /* ---------------- APPROACH (unchanged) ---------------- */
     function renderApproach(){
       return `
         <section id="panel-approach" class="space-y-4">
@@ -203,8 +186,6 @@
         </section>
       `;
     }
-
-    /* ---------- NERDIO (left) ---------- */
     function renderNerdio(){
       return `
         <section class="card p-4" aria-label="Nerdio Orchestration">
@@ -212,13 +193,12 @@
             <div class="flex items-center gap-2">
               <div class="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 grid place-items-center"><span class="text-slate-900 font-black">N</span></div>
               <div>
-                <h3 class="text-base font-semibold">Nerdio — Orchestration</h3>
+                <h3 class="text.base font-semibold text-base">Nerdio — Orchestration</h3>
                 <div class="text-[12px] text-slate-400">Provision • Autoscale • Policy via Intune</div>
               </div>
             </div>
             <button type="button" class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[12px]" data-action="toggle-labels-nerdio">${STATE.showLabelsNerdio?'Hide':'Show'} labels</button>
           </div>
-
           <div id="nerdioCard" class="mt-3 sub p-3">
             <div class="grid grid-cols-1 gap-3" role="region" aria-label="Animated orchestration">
               <div class="pool p-3">
@@ -229,7 +209,6 @@
                 <div class="mt-2 grid grid-cols-6 gap-2" id="poolA"></div>
                 <div class="mt-2 meter"><div class="bar bg-gradient-to-r from-emerald-400 via-cyan-400 to-sky-400" style="--d:.2s"></div></div>
               </div>
-
               <div class="pool p-3">
                 <div class="flex items-center justify-between">
                   <div class="text-sm font-medium">AVD Host Pools</div>
@@ -238,17 +217,14 @@
                 <div class="mt-2 grid grid-cols-6 gap-2" id="poolB"></div>
                 <div class="mt-2 meter"><div class="bar bg-gradient-to-r from-emerald-400 via-cyan-400 to-sky-400" style="--d:.5s"></div></div>
               </div>
-
               <div class="pool p-3">
                 <div class="text-sm font-medium">Policy via Intune</div>
                 <div class="mt-2 grid grid-cols-10 gap-1.5" id="policyDots"></div>
               </div>
-
               <div class="pool p-3">
                 <div class="flex items-center gap-2 text-sm font-medium"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-sky-300"></i>Insights</div>
                 <div class="mt-2 meter"><div class="bar bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-400" style="--d:.9s"></div></div>
               </div>
-
               <div class="pool p-3">
                 <div class="flex items-center gap-2 text-sm"><i data-lucide="user-check" class="w-4 h-4 text-emerald-300"></i><span>Identity-driven Workspace</span></div>
                 <div class="mt-2 user-beam bg-gradient-to-r from-emerald-400 via-cyan-400 to-sky-400" style="--d:1.2s"></div>
@@ -259,8 +235,6 @@
         </section>
       `;
     }
-
-    /* ---------- RECAST (right) ---------- */
     function renderRecast(){
       return `
         <section class="card p-4" aria-label="Recast Application Workspace">
@@ -276,7 +250,6 @@
               <button type="button" class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1" data-action="toggle-labels-recast">${STATE.showLabelsRecast?'Hide':'Show'} labels</button>
             </div>
           </div>
-
           <div id="recastCard" class="mt-3 sub p-3" role="region" aria-label="Animated catalog">
             <div class="space-y-2">
               ${CATALOG.map(s=>`
@@ -286,7 +259,6 @@
                 </div>
               `).join('')}
             </div>
-
             <div class="mt-3 grid grid-cols-3 gap-2" aria-hidden="true">
               ${['Existing Platforms','Staged Rings','Access & Policy'].map((t,i)=>`
                 <div class="sub p-2">
@@ -296,7 +268,6 @@
                 </div>
               `).join('')}
             </div>
-
             <div class="mt-3 grid grid-cols-3 gap-2" aria-hidden="true">
               ${['Business Unit','Subsidiary','Region'].map((t,i)=>`
                 <div class="sub p-2">
@@ -306,17 +277,15 @@
                 </div>
               `).join('')}
             </div>
-
             <div class="mt-3 grid grid-cols-3 gap-2" aria-hidden="true">
               ${['Windows & macOS','VDI / Web','Mobile'].map((t,i)=>`
                 <div class="sub p-2 text-center">
-                  <i data-lucide="${['monitor-smartphone','laptop','smartphone'][i]}" class="h-5 w-5 text-slate-300"></i>
+                  <i data-lucide="${['monitor-smartphone','laptop','smartphone'][i]}" class="h-5 w-5 opacity-80"></i>
                   <div id="flowDev${'ABC'[i]}" class="mt-1 grid grid-cols-6 gap-1.5"></div>
                   <div class="mt-1 text-[11px] text-slate-400">${t}</div>
                 </div>
               `).join('')}
             </div>
-
             <div class="mt-3">
               <div id="endUserCard" class="sub p-3">
                 <div class="flex items-center gap-3">
@@ -339,14 +308,12 @@
         </section>
       `;
     }
-
-    /* ---------------- OUTCOMES ---------------- */
     function renderOutcomes(){
       const t=STATE.targets;
       return `
         <section id="panel-outcomes" class="space-y-4">
           <div class="card p-4">
-            <h2 class="text-xl font-semibold"> Better Together Value (Estimated Combined Value)</h2>
+            <h2 class="text-xl font-semibold">Better Together Outcomes (Est. Combined Value)</h2>
             <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
               ${metric('Under 1 hour onboarding','timer', t.onboardingMins+' mins', range('onboardingMins',30,120,t.onboardingMins))}
               ${metric('Packaging avoided / app','scissors', `${t.pkgHrsLow}–${t.pkgHrsHigh} hrs`, '')}
@@ -355,7 +322,7 @@
             </div>
             <div class="mt-3 flex gap-2">
               <button type="button" class="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-slate-900 focus-ring inline-flex items-center gap-2" data-action="copy">
-                <i data-lucide="clipboard" class="w-4 h-4"></i>${STATE.copied?'Copied!':'Copy pilot summary'}
+                <i data-lucide="clipboard" class="w-4 h-4"></i>${STATE.copied?'Copied!':'Copy Value Summary}
               </button>
               <button type="button" class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm focus-ring" data-action="tab" data-id="approach">Back to click-through</button>
             </div>
@@ -363,7 +330,6 @@
         </section>
       `;
     }
-
     function metric(title,icon,value,controlHtml){
       return `
         <div class="sub p-3">
@@ -387,8 +353,6 @@
         </label>
       `;
     }
-
-    /* ---------------- BUILDERS: NERDIO ---------------- */
     function buildNerdio(){
       const a=document.getElementById('poolA');
       const b=document.getElementById('poolB');
@@ -419,8 +383,6 @@
       }
       return d;
     }
-
-    /* ---------------- BUILDERS: RECAST ---------------- */
     function buildRecast(){
       let base=0;
       CATALOG.forEach(section=>{
@@ -456,7 +418,6 @@
       buildTiles(document.getElementById('flowDevA'), 10, 1.5);
       buildTiles(document.getElementById('flowDevB'), 10, 1.55);
       buildTiles(document.getElementById('flowDevC'), 10, 1.6);
-
       const avatar=document.getElementById('endUserAvatar');
       const badge=document.getElementById('endUserBadge');
       if(avatar){ avatar.classList.remove('bg-emerald-500'); avatar.classList.add('bg-rose-600/90'); }
@@ -471,8 +432,6 @@
         container.appendChild(d);
       }
     }
-
-    /* ---------------- CATALOG ICONS ---------------- */
     const CATALOG=[
       {title:'CORE PRODUCTIVITY',id:'cat-core',items:[
         logo('Microsoft Word','W','#185ABD'),
@@ -541,8 +500,6 @@
       return { name, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" aria-label="${name}"><rect x="1.5" y="1.5" width="45" height="45" rx="12" fill="#111827" stroke="rgba(255,255,255,.15)"/><path d="M24 12c5 7-2 9 3 14 3 3 2 9-3 11-5-2-6-8-3-11 5-5-3-7 3-14z" fill="${c1}"/><circle cx="26" cy="28" r="4" fill="${c2}"/></svg>` };
     }
     function shade(hex,m){ const c=hex.replace('#',''); const n=[0,1,2].map(i=>parseInt(c.slice(i*2,i*2+2),16)); const s=n.map(v=>Math.max(0,Math.min(255,Math.round(v*m)))); return '#'+s.map(v=>v.toString(16).padStart(2,'0')).join(''); }
-
-    /* ---------------- EVENTS ---------------- */
     function attachEvents(){
       const root=document.getElementById('app');
       root.querySelectorAll('[data-action="tab"]').forEach(b=>b.addEventListener('click',e=>{ STATE.tab=e.currentTarget.getAttribute('data-id'); render(); }));
@@ -574,12 +531,10 @@ Measure weekly and adjust rings/policies accordingly.`;
         STATE.copied=true; render(); setTimeout(()=>{ STATE.copied=false; render(); }, 1200);
       });
     }
-
     function startAll(){
       const nerdio=document.getElementById('nerdioCard');
       const recast=document.getElementById('recastCard');
       [nerdio,recast].forEach(c=>{ if(!c) return; c.classList.remove('run'); void c.offsetWidth; c.classList.add('run'); });
-
       const avatar=document.getElementById('endUserAvatar');
       const badge=document.getElementById('endUserBadge');
       const success=document.getElementById('flowSuccess');
@@ -602,7 +557,6 @@ Measure weekly and adjust rings/policies accordingly.`;
       success && success.classList.add('hidden');
       buildNerdio(); buildRecast();
     }
-
     document.addEventListener('DOMContentLoaded', render);
   </script>
 </body>
