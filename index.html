@@ -44,9 +44,6 @@
     .policy-dot{width:.5rem;height:.5rem;border-radius:999px;background:#334155}
     .run .policy-dot{animation:dotOn .9s ease forwards var(--d,0s)}
     @keyframes dotOn{0%{transform:scale(.7);opacity:.4}60%{transform:scale(1.2);opacity:1;background:#34d399}100%{transform:scale(1);background:#22c55e}}
-
-    /* Misc animations */
-    @keyframes barGrow{to{transform:scaleX(1)}}
   </style>
 </head>
 <body class="min-h-screen bg-[#0b1020] text-slate-100 antialiased">
@@ -54,10 +51,9 @@
 
   <script>
     const STATE = {
-      tab: 'current', // current | approach | outcomes
+      tab: 'current', // 'current' | 'approach' | 'outcomes'
       showLabelsRecast: false,
       showLabelsNerdio: false,
-      flowRunning: false,
       targets: { onboardingMins: 60, patchPct: 95, azureSavePct: 20, pkgHrsLow: 5, pkgHrsHigh: 10 },
       copied: false
     };
@@ -105,7 +101,7 @@
       </button>`;
     }
 
-    /* ---------- CURRENT STATE (new) ---------- */
+    /* ---------------- CURRENT STATE ---------------- */
     function renderCurrent(){
       return `
         <section id="panel-current" class="space-y-4">
@@ -193,7 +189,7 @@
       `;
     }
 
-    /* ---------- APPROACH PANEL (unchanged) ---------- */
+    /* ---------------- APPROACH (unchanged) ---------------- */
     function renderApproach(){
       return `
         <section id="panel-approach" class="space-y-4">
@@ -344,7 +340,7 @@
       `;
     }
 
-    /* ---------- OUTCOMES PANEL ---------- */
+    /* ---------------- OUTCOMES ---------------- */
     function renderOutcomes(){
       const t=STATE.targets;
       return `
@@ -392,9 +388,11 @@
       `;
     }
 
-    /* ---------- BUILDERS: NERDIO ---------- */
+    /* ---------------- BUILDERS: NERDIO ---------------- */
     function buildNerdio(){
-      const a=document.getElementById('poolA'); const b=document.getElementById('poolB'); const p=document.getElementById('policyDots');
+      const a=document.getElementById('poolA');
+      const b=document.getElementById('poolB');
+      const p=document.getElementById('policyDots');
       if(a){ a.innerHTML=''; for(let i=0;i<12;i++){ a.appendChild(poolVM(i,.15+i*0.05,'emerald')); } }
       if(b){ b.innerHTML=''; for(let i=0;i<12;i++){ b.appendChild(poolVM(i,.4+i*0.05,'sky')); } }
       if(p){ p.innerHTML=''; for(let i=0;i<24;i++){ const d=document.createElement('div'); d.className='policy-dot'; d.style.setProperty('--d', (0.8 + i*0.05)+'s'); p.appendChild(d); } }
@@ -413,21 +411,38 @@
         ? 'linear-gradient(to right,#34d399,#22d3ee,#38bdf8)'
         : 'linear-gradient(to right,#38bdf8,#6366f1,#a78bfa)';
       d.appendChild(bar);
-      if(STATE.showLabelsNerdio){ const t=document.createElement('span'); t.textContent='VM'; t.className='absolute inset-0 grid place-items-center text-[10px] text-white/80'; d.appendChild(t); }
+      if(STATE.showLabelsNerdio){
+        const t=document.createElement('span');
+        t.textContent='VM';
+        t.className='absolute inset-0 grid place-items-center text-[10px] text-white/80';
+        d.appendChild(t);
+      }
       return d;
     }
 
-    /* ---------- BUILDERS: RECAST ---------- */
+    /* ---------------- BUILDERS: RECAST ---------------- */
     function buildRecast(){
       let base=0;
       CATALOG.forEach(section=>{
         const mount=document.getElementById(section.id); if(!mount) return;
         mount.innerHTML='';
         section.items.forEach((itm,idx)=>{
-          const wrap=document.createElement('div'); wrap.className='logo-wrap'; wrap.style.setProperty('--d',(base+idx*0.06).toFixed(2)+'s');
-          const ring=document.createElement('div'); ring.className='logo-ring'; ring.innerHTML=itm.svg; ring.title=itm.name; ring.setAttribute('role','img'); ring.setAttribute('aria-label',itm.name);
+          const wrap=document.createElement('div');
+          wrap.className='logo-wrap';
+          wrap.style.setProperty('--d',(base+idx*0.06).toFixed(2)+'s');
+          const ring=document.createElement('div');
+          ring.className='logo-ring';
+          ring.innerHTML=itm.svg;
+          ring.title=itm.name;
+          ring.setAttribute('role','img');
+          ring.setAttribute('aria-label',itm.name);
           wrap.appendChild(ring);
-          if(STATE.showLabelsRecast){ const label=document.createElement('span'); label.className='logo-name'; label.textContent=itm.name; wrap.appendChild(label); }
+          if(STATE.showLabelsRecast){
+            const label=document.createElement('span');
+            label.className='logo-name';
+            label.textContent=itm.name;
+            wrap.appendChild(label);
+          }
           mount.appendChild(wrap);
         });
         base+=0.25;
@@ -449,10 +464,15 @@
     }
     function buildTiles(container,count,baseDelay){
       if(!container) return; container.innerHTML='';
-      for(let i=0;i<count;i++){ const d=document.createElement('div'); d.className='tile'; d.style.setProperty('--d',(baseDelay+i*0.04).toFixed(2)+'s'); container.appendChild(d); }
+      for(let i=0;i<count;i++){
+        const d=document.createElement('div');
+        d.className='tile';
+        d.style.setProperty('--d',(baseDelay+i*0.04).toFixed(2)+'s');
+        container.appendChild(d);
+      }
     }
 
-    /* ---------- CATALOG (brands-like marks) ---------- */
+    /* ---------------- CATALOG ICONS ---------------- */
     const CATALOG=[
       {title:'CORE PRODUCTIVITY',id:'cat-core',items:[
         logo('Microsoft Word','W','#185ABD'),
@@ -509,10 +529,8 @@
     }
     function multiLogo(name,colors){
       const slices=colors.map((c,i)=>`<rect x="${4+i*9}" y="8" width="7" height="32" rx="4" fill="${c}"></rect>`).join('');
-      return { name, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" role="img" aria-label="${name}"><rect x="1.5" y="1.5" width="45" height="45" rx="12" fill="#111827" stroke="rgba(255,255,255,.15)"/>${s slices}</svg>` };
+      return { name, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" role="img" aria-label="${name}"><rect x="1.5" y="1.5" width="45" height="45" rx="12" fill="#111827" stroke="rgba(255,255,255,.15)"/>${slices}</svg>` };
     }
-  </script>
-  <script>
     function triLogo(name,r1,r2,r3,r4){
       return { name, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" aria-label="${name}"><rect x="1.5" y="1.5" width="45" height="45" rx="12" fill="#111827" stroke="rgba(255,255,255,.15)"/><circle cx="24" cy="24" r="12" fill="${r4}"/><path d="M24 12 A12 12 0 0 1 36 24 L24 24 Z" fill="${r1}"/><path d="M36 24 A12 12 0 0 1 24 36 L24 24 Z" fill="${r2}"/><path d="M24 36 A12 12 0 0 1 24 12 L24 24 Z" fill="${r3}"/></svg>` };
     }
@@ -524,13 +542,14 @@
     }
     function shade(hex,m){ const c=hex.replace('#',''); const n=[0,1,2].map(i=>parseInt(c.slice(i*2,i*2+2),16)); const s=n.map(v=>Math.max(0,Math.min(255,Math.round(v*m)))); return '#'+s.map(v=>v.toString(16).padStart(2,'0')).join(''); }
 
+    /* ---------------- EVENTS ---------------- */
     function attachEvents(){
       const root=document.getElementById('app');
       root.querySelectorAll('[data-action="tab"]').forEach(b=>b.addEventListener('click',e=>{ STATE.tab=e.currentTarget.getAttribute('data-id'); render(); }));
-      root.querySelector('[data-action="start"]')?.addEventListener('click', startAll);
-      root.querySelector('[data-action="reset"]')?.addEventListener('click', resetAll);
       root.querySelector('[data-action="toggle-labels-recast"]')?.addEventListener('click',()=>{ STATE.showLabelsRecast=!STATE.showLabelsRecast; buildRecast(); });
       root.querySelector('[data-action="toggle-labels-nerdio"]')?.addEventListener('click',()=>{ STATE.showLabelsNerdio=!STATE.showLabelsNerdio; buildNerdio(); });
+      root.querySelector('[data-action="start"]')?.addEventListener('click', startAll);
+      root.querySelector('[data-action="reset"]')?.addEventListener('click', resetAll);
       root.querySelectorAll('[data-action="range"]').forEach(r=>r.addEventListener('input',e=>{
         const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value)||0; STATE.targets[key]=v; render();
       }));
@@ -561,17 +580,23 @@ Measure weekly and adjust rings/policies accordingly.`;
       const recast=document.getElementById('recastCard');
       [nerdio,recast].forEach(c=>{ if(!c) return; c.classList.remove('run'); void c.offsetWidth; c.classList.add('run'); });
 
-      const avatar=document.getElementById('endUserAvatar'); const badge=document.getElementById('endUserBadge'); const success=document.getElementById('flowSuccess');
+      const avatar=document.getElementById('endUserAvatar');
+      const badge=document.getElementById('endUserBadge');
+      const success=document.getElementById('flowSuccess');
       if(avatar&&badge){
-        avatar.classList.remove('bg-emerald-500'); avatar.classList.add('bg-rose-600/90'); badge.textContent='!'; badge.classList.remove('bg-green-500'); badge.classList.add('bg-rose-500');
+        avatar.classList.remove('bg-emerald-500'); avatar.classList.add('bg-rose-600/90');
+        badge.textContent='!'; badge.classList.remove('bg-green-500'); badge.classList.add('bg-rose-500');
         setTimeout(()=>{ avatar.classList.remove('bg-rose-600/90'); avatar.classList.add('bg-emerald-500'); badge.textContent='✓'; badge.classList.remove('bg-rose-500'); badge.classList.add('bg-green-500'); success && success.classList.remove('hidden'); }, 2300);
         setTimeout(()=>{ [nerdio,recast].forEach(c=>c && c.classList.remove('run')); }, 6000);
       }
     }
     function resetAll(){
-      const nerdio=document.getElementById('nerdioCard'); const recast=document.getElementById('recastCard'); const success=document.getElementById('flowSuccess');
+      const nerdio=document.getElementById('nerdioCard');
+      const recast=document.getElementById('recastCard');
+      const success=document.getElementById('flowSuccess');
       [nerdio,recast].forEach(c=>c && c.classList.remove('run'));
-      const avatar=document.getElementById('endUserAvatar'); const badge=document.getElementById('endUserBadge');
+      const avatar=document.getElementById('endUserAvatar');
+      const badge=document.getElementById('endUserBadge');
       if(avatar){ avatar.classList.remove('bg-emerald-500'); avatar.classList.add('bg-rose-600/90'); }
       if(badge){ badge.textContent='!'; badge.classList.remove('bg-green-500'); badge.classList.add('bg-rose-500'); }
       success && success.classList.add('hidden');
