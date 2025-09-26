@@ -384,16 +384,6 @@
                 </div>
               </section>
             </div>
-
-            <div class="mt-4 sub p-4 text-[11px] text-slate-400" role="note" aria-label="Disclaimers">
-              <div class="flex items-center gap-2 text-slate-300 font-medium mb-1"><i data-lucide="info" class="w-3.5 h-3.5" aria-hidden="true"></i>Footnotes & Truth-Check</div>
-              <ul class="list-disc pl-5 space-y-1">
-                <li>Azure autoscale savings of up to ~55% are reported by customers using right-sizing and autoscale on idle host pools; your mileage will vary with usage patterns and reserved instances.</li>
-                <li>App packaging time savings of ~5–10 hours per app reflect common field data; complex apps may exceed this range.</li>
-                <li>Patch-compliance targets (>95%) reduce risk exposure but do not directly convert to dollar savings here; add your incident/penalty data for risk-adjusted ROI.</li>
-                <li>All values are illustrative; replace inputs with your data and export for audit review.</li>
-              </ul>
-            </div>
           </div>
         </section>
       `;
@@ -722,10 +712,8 @@
         const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value)||0; STATE.inputs[key]=v; render();
       }));
       root.querySelectorAll('[data-action="number"]').forEach(n=>n.addEventListener('input',e=>{
-        const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value); STATE.inputs[key]=Number.isFinite(v)?v:STATE.inputs[key]; // keep last good
-        // Live update outputs without full re-render for performance
+        const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value); STATE.inputs[key]=Number.isFinite(v)?v:STATE.inputs[key];
         const out = computeROI();
-        // No partial DOM patching here to keep code simple; re-render for consistency
         render();
       }));
       root.querySelector('[data-action="roi-mode"]')?.addEventListener('click',e=>{ STATE.roiMode=e.currentTarget.getAttribute('data-id'); render(); });
