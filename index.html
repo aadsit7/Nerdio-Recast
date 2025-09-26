@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Nerdio + Recast — Current State, Approach, Outcomes</title>
+  <title>Nerdio + Recast — Current State, Approach, Outcomes (ROI)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -49,9 +49,24 @@
       tab: 'current',
       showLabelsRecast: false,
       showLabelsNerdio: false,
-      targets: { onboardingMins: 60, patchPct: 95, azureSavePct: 20, pkgHrsLow: 5, pkgHrsHigh: 10 },
+      roiMode: 'combined', // 'recast' | 'combined'
+      inputs: {
+        users: 5000,
+        apps: 250,
+        costPerHour: 75,
+        azureInfraCostYr: 1000000,
+        subCostRecastYr: 150000,
+        subCostNerdioYr: 200000,
+        pkgHoursPerApp: 8,         // 5–10 typical
+        nerdioHrsPer100: 25,       // 20–30 typical
+        azureSavePct: 20,          // up to ~55% with autoscale
+        endUserMinsPerUser: 5,     // optional productivity lift
+        onboardingMins: 60,
+        patchPct: 95
+      },
       copied: false
     };
+
     function render(){
       const root=document.getElementById('app');
       root.innerHTML = `
@@ -65,10 +80,10 @@
             <p class="mt-2 max-w-3xl text-slate-300">
               Nerdio orchestrates Cloud PCs/AVD/Intune. Recast controls the apps. Together we deliver one governed, identity-driven workspace—desktops and applications provisioned, patched, and ready in a single flow.
             </p>
-            <nav class="mt-5 flex w-full flex-wrap gap-2 rounded-full bg-[#0b152f] p-1 ring-1 ring-white/10" role="tablist">
+            <nav class="mt-5 flex w-full flex-wrap gap-2 rounded-full bg-[#0b152f] p-1 ring-1 ring-white/10" role="tablist" aria-label="Primary">
               ${tabBtn('current','Current State','alert-circle')}
               ${tabBtn('approach','Approach (Nerdio+Recast)','workflow')}
-              ${tabBtn('outcomes','Outcomes','bar-chart-3')}
+              ${tabBtn('outcomes','ROI & Outcomes','bar-chart-3')}
               ${STATE.tab==='approach' ? `
               <div class="ml-auto flex items-center gap-2">
                 <button type="button" class="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 focus-ring" data-action="start">Start</button>
@@ -77,7 +92,7 @@
             </nav>
           </div>
         </header>
-        <main class="mx-auto max-w-6xl px-4 pb-16">
+        <main class="mx-auto max-w-6xl px-4 pb-16" role="main">
           ${STATE.tab==='current'?renderCurrent():''}
           ${STATE.tab==='approach'?renderApproach():''}
           ${STATE.tab==='outcomes'?renderOutcomes():''}
@@ -87,15 +102,17 @@
       attachEvents();
       if (STATE.tab==='approach'){ buildRecast(); buildNerdio(); }
     }
+
     function tabBtn(id,label,icon){
       const active=STATE.tab===id;
       return `<button type="button" class="${active?'bg-yellow-400 text-slate-900':'text-slate-200 hover:bg-white/5'} inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm focus-ring" data-action="tab" data-id="${id}" aria-selected="${active}" aria-controls="panel-${id}">
-        <i data-lucide="${icon}" class="w-4 h-4"></i><span>${label}</span>
+        <i data-lucide="${icon}" class="w-4 h-4" aria-hidden="true"></i><span>${label}</span>
       </button>`;
     }
+
     function renderCurrent(){
       return `
-        <section id="panel-current" class="space-y-4">
+        <section id="panel-current" class="space-y-4" aria-label="Current State">
           <div class="card p-4">
             <div class="flex flex-wrap items-center gap-2 text-[12px]">
               <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 ring-1 ring-white/15">
@@ -112,92 +129,77 @@
             ${problemTile('Fragmented Delivery','layout-grid','Images sprawl across AVD, W365, and on-prem; policy drift grows.')}
             ${problemTile('Packaging Backlog','boxes','Teams burn 5–10 hrs per app doing repeat work; migrations stall.')}
             ${problemTile('Zero-day Exposure','shield-alert','Third-party apps + OS images unpatched = risk window measured in days.')}
-            ${problemTile('Slow Upgrades','gauge','Idle host pools and static capacity drive Azure overspend.')}
+            ${problemTile('Azure Overspend','gauge','Idle host pools and static capacity drive unnecessary Azure costs.')}
           </div>
           <p class="text-sm text-slate-300">Too many apps, too many versions — IT can’t keep up. Desktops and apps drift apart; security and cost suffer.</p>
           <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
             <article class="sub p-4">
-              <div class="flex items-center gap-2"><i data-lucide="circle-help" class="h-5 w-5 text-sky-300"></i><h3 class="font-semibold">Why Change (the problem)</h3></div>
+              <div class="flex items-center gap-2"><i data-lucide="circle-help" class="h-5 w-5 text-sky-300" aria-hidden="true"></i><h3 class="font-semibold">Why Change</h3></div>
               <ul class="mt-2 list-disc pl-5 text-sm text-slate-200">
-                <li>Apps are the #1 bottleneck — packaging, patching, and approvals stall every project.</li>
+                <li>Apps are the #1 bottleneck — packaging, patching, and approvals stall projects.</li>
                 <li>Infra sprawl & idle capacity — static pools and image drift drive Azure overspend.</li>
-                <li>Innovation waits — cloud, security, and AI adoption slows until desktops + apps are governed together.</li>
+                <li>Innovation waits — until desktops + apps are governed together.</li>
               </ul>
             </article>
             <article class="sub p-4">
-              <div class="flex items-center gap-2"><i data-lucide="alarm-clock" class="h-5 w-5 text-amber-300"></i><h3 class="font-semibold">Why Now (the urgency)</h3></div>
+              <div class="flex items-center gap-2"><i data-lucide="alarm-clock" class="h-5 w-5 text-amber-300" aria-hidden="true"></i><h3 class="font-semibold">Why Now</h3></div>
               <ul class="mt-2 list-disc pl-5 text-sm text-slate-200">
-                <li>Faster release cycles — OS, SaaS, and AI tools demand automation, not manual work.</li>
-                <li>Zero-day & compliance pressure — patch delays and image lag create unacceptable risk.</li>
-                <li>Do more with less — IT teams aren’t growing, but Azure spend is; automation is no longer optional.</li>
+                <li>Faster release cycles demand automation over manual work.</li>
+                <li>Zero-day & compliance pressure make patch delays unacceptable.</li>
+                <li>Do more with less — automation is no longer optional.</li>
               </ul>
             </article>
             <article class="sub p-4">
-              <div class="flex items-center gap-2"><i data-lucide="sparkles" class="h-5 w-5 text-emerald-300"></i><h3 class="font-semibold">Why Better Together (Recast + Nerdio)</h3></div>
+              <div class="flex items-center gap-2"><i data-lucide="sparkles" class="h-5 w-5 text-emerald-300" aria-hidden="true"></i><h3 class="font-semibold">Why Better Together</h3></div>
               <ol class="mt-2 list-decimal pl-5 text-sm text-slate-200 space-y-2">
-                <li>
-                  <span class="font-medium">Complete the workspace</span>
-                  <ul class="mt-1 list-disc pl-5 text-slate-300">
-                    <li>Desktops without apps are useless; apps without secure desktops are risky.</li>
-                    <li>Only Nerdio + Recast deliver infrastructure + applications in one governed motion.</li>
-                  </ul>
-                </li>
-                <li>
-                  <span class="font-medium">Prove measurable impact in days, not months</span>
-                  <ul class="mt-1 list-disc pl-5 text-slate-300">
-                    <li>Desktops right-sized and apps delivered in under an hour, not weeks.</li>
-                    <li>Immediate cost savings (Azure autoscale up to 55%) + instant app readiness (5–10 hrs/app saved).</li>
-                  </ul>
-                </li>
-                <li>
-                  <span class="font-medium">Migrate without disruption, secure without friction</span>
-                  <ul class="mt-1 list-disc pl-5 text-slate-300">
-                    <li>Smart Icons keep shortcuts consistent as users move from Citrix/Horizon → AVD.</li>
-                    <li>Automated patching + lifecycle management mean &gt;95% compliance and reduced risk — built in, not bolted on.</li>
-                  </ul>
-                </li>
+                <li><span class="font-medium">Complete the workspace</span> — infra + apps in one flow.</li>
+                <li><span class="font-medium">Measurable impact fast</span> — autoscale savings + packaging time avoided.</li>
+                <li><span class="font-medium">Migrate without disruption</span> — >95% patch compliance targets and consistent app access.</li>
               </ol>
             </article>
           </div>
         </section>
       `;
     }
+
     function problemTile(title,icon,body){
       return `
         <article class="sub p-4">
           <div class="flex items-center gap-2">
-            <i data-lucide="${icon}" class="w-5 h-5 text-sky-300"></i>
+            <i data-lucide="${icon}" class="w-5 h-5 text-sky-300" aria-hidden="true"></i>
             <h3 class="font-semibold">${title}</h3>
           </div>
           <p class="mt-1 text-sm text-slate-300">${body}</p>
         </article>
       `;
     }
+
     function renderApproach(){
       return `
-        <section id="panel-approach" class="space-y-4">
+        <section id="panel-approach" class="space-y-4" aria-label="Approach">
           <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
             ${renderNerdio()}
             ${renderRecast()}
           </div>
           <div class="card p-4 text-sm text-slate-300">
-            <span class="font-medium text-slate-100">Put Simply|</span> Nerdio makes the right Cloud PC or AVD session appear—right-sized and policy-compliant. Recast puts the right apps on it and keeps them patched. The user signs in once and it’s all there.
+            <span class="font-medium text-slate-100">Put Simply</span> — Nerdio makes the right Cloud PC or AVD session appear—right-sized and policy-compliant. Recast puts the right apps on it and keeps them patched. The user signs in once and it’s all there.
           </div>
         </section>
       `;
     }
+
     function renderNerdio(){
       return `
         <section class="card p-4" aria-label="Nerdio Orchestration">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 grid place-items-center"><span class="text-slate-900 font-black">N</span></div>
+              <div class="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 grid place-items-center" aria-hidden="true"><span class="text-slate-900 font-black">N</span></div>
               <div>
-                <h3 class="text.base font-semibold text-base">Nerdio — Desktop Orchestration</h3>
+                <h3 class="text-base font-semibold">Nerdio — Desktop Orchestration</h3>
                 <div class="text-[12px] text-slate-400">Provision • Autoscale • Policy via Intune</div>
               </div>
             </div>
-            <button type="button" class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[12px]" data-action="toggle-labels-nerdio">${STATE.showLabelsNerdio?'Hide':'Show'} labels</button>
+            <button type="button" class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[12px]" data-action="toggle-labels-nerdio" aria-pressed="${STATE.showLabelsNerdio}">${STATE.showLabelsNerdio?'Hide':'Show'} labels</button>
           </div>
           <div id="nerdioCard" class="mt-3 sub p-3">
             <div class="grid grid-cols-1 gap-3" role="region" aria-label="Animated orchestration">
@@ -222,11 +224,11 @@
                 <div class="mt-2 grid grid-cols-10 gap-1.5" id="policyDots"></div>
               </div>
               <div class="pool p-3">
-                <div class="flex items-center gap-2 text-sm font-medium"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-sky-300"></i>Insights</div>
+                <div class="flex items-center gap-2 text-sm font-medium"><i data-lucide="chart-no-axes-combined" class="w-4 h-4 text-sky-300" aria-hidden="true"></i>Insights</div>
                 <div class="mt-2 meter"><div class="bar bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-400" style="--d:.9s"></div></div>
               </div>
               <div class="pool p-3">
-                <div class="flex items-center gap-2 text-sm"><i data-lucide="user-check" class="w-4 h-4 text-emerald-300"></i><span>Identity-driven Workspace</span></div>
+                <div class="flex items-center gap-2 text-sm"><i data-lucide="user-check" class="w-4 h-4 text-emerald-300" aria-hidden="true"></i><span>Identity-driven Workspace</span></div>
                 <div class="mt-2 user-beam bg-gradient-to-r from-emerald-400 via-cyan-400 to-sky-400" style="--d:1.2s"></div>
                 <div class="mt-2 text-[12px] text-slate-400">Desktop is ready and right-sized before apps arrive.</div>
               </div>
@@ -235,19 +237,20 @@
         </section>
       `;
     }
+
     function renderRecast(){
       return `
         <section class="card p-4" aria-label="Recast Application Workspace">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="h-6 w-6 rounded-lg bg-gradient-to-br from-yellow-300 via-amber-300 to-orange-400 grid place-items-center"><span class="text-slate-900 font-black">R</span></div>
+              <div class="h-6 w-6 rounded-lg bg-gradient-to-br from-yellow-300 via-amber-300 to-orange-400 grid place-items-center" aria-hidden="true"><span class="text-slate-900 font-black">R</span></div>
               <div>
                 <h3 class="text-base font-semibold">Recast — Application Workspace</h3>
                 <div class="text-[12px] text-slate-400">Curated & secured catalog + third-party patching</div>
               </div>
             </div>
             <div class="flex items-center gap-2 text-[12px] text-slate-300">
-              <button type="button" class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1" data-action="toggle-labels-recast">${STATE.showLabelsRecast?'Hide':'Show'} labels</button>
+              <button type="button" class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1" data-action="toggle-labels-recast" aria-pressed="${STATE.showLabelsRecast}">${STATE.showLabelsRecast?'Hide':'Show'} labels</button>
             </div>
           </div>
           <div id="recastCard" class="mt-3 sub p-3" role="region" aria-label="Animated catalog">
@@ -280,7 +283,7 @@
             <div class="mt-3 grid grid-cols-3 gap-2" aria-hidden="true">
               ${['Windows & macOS','VDI / Web','Mobile'].map((t,i)=>`
                 <div class="sub p-2 text-center">
-                  <i data-lucide="${['monitor-smartphone','laptop','smartphone'][i]}" class="h-5 w-5 opacity-80"></i>
+                  <i data-lucide="${['monitor-smartphone','laptop','smartphone'][i]}" class="h-5 w-5 opacity-80" aria-hidden="true"></i>
                   <div id="flowDev${'ABC'[i]}" class="mt-1 grid grid-cols-6 gap-1.5"></div>
                   <div class="mt-1 text-[11px] text-slate-400">${t}</div>
                 </div>
@@ -289,7 +292,7 @@
             <div class="mt-3">
               <div id="endUserCard" class="sub p-3">
                 <div class="flex items-center gap-3">
-                  <div id="endUserAvatar" class="h-9 w-9 rounded-full bg-rose-600/90 grid place-items-center font-semibold">U</div>
+                  <div id="endUserAvatar" class="h-9 w-9 rounded-full bg-rose-600/90 grid place-items-center font-semibold" aria-hidden="true">U</div>
                   <div class="text-sm">
                     <div class="font-medium text-slate-200">End user</div>
                     <div class="text-slate-400">Apps on demand — no waiting, no tickets.</div>
@@ -297,40 +300,111 @@
                 </div>
                 <div class="mt-3 user-beam bg-gradient-to-r from-amber-300 via-yellow-300 to-orange-400" style="--d:2.1s"></div>
                 <div class="relative mt-2 rounded-lg border border-white/10 bg-[#0b1328] p-4">
-                  <i data-lucide="laptop" class="h-5 w-5 opacity-80"></i>
+                  <i data-lucide="laptop" class="h-5 w-5 opacity-80" aria-hidden="true"></i>
                   <div id="endUserBadge" class="absolute right-2 top-2 badge bg-rose-500 text-black grid place-items-center font-bold" style="--d:2.4s">!</div>
                   <div class="mt-1 text-[11px] text-slate-400">Workspace launches the correct app instantly</div>
                 </div>
               </div>
-              <div id="flowSuccess" class="mt-2 hidden text-emerald-300 text-[13px] inline-flex items-center gap-1"><i data-lucide="sparkles" class="h-4 w-4"></i><span>Desktop + apps delivered together with identity and rings.</span></div>
+              <div id="flowSuccess" class="mt-2 hidden text-emerald-300 text-[13px] inline-flex items-center gap-1"><i data-lucide="sparkles" class="h-4 w-4" aria-hidden="true"></i><span>Desktop + apps delivered together with identity and rings.</span></div>
             </div>
           </div>
         </section>
       `;
     }
+
     function renderOutcomes(){
-      const t=STATE.targets;
+      const t=STATE.inputs;
+      const calc = computeROI();
       return `
-        <section id="panel-outcomes" class="space-y-4">
+        <section id="panel-outcomes" class="space-y-4" aria-label="ROI & Outcomes">
           <div class="card p-4">
-            <h2 class="text-xl font-semibold">Better Together (Est.Combined Value)</h2>
-            <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
-              ${metric('Under 1 hour onboarding','timer', t.onboardingMins+' mins', range('onboardingMins',30,120,t.onboardingMins))}
-              ${metric('Packaging avoided / app','scissors', `${t.pkgHrsLow}–${t.pkgHrsHigh} hrs`, '')}
-              ${metric('Patch-compliance goal','shield-check', t.patchPct+' %', range('patchPct',85,100,t.patchPct))}
-              ${metric('Azure cost reduction','trending-down', t.azureSavePct+' %', range('azureSavePct',0,40,t.azureSavePct))}
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-xl font-semibold">ROI — ${STATE.roiMode==='recast'?'Recast Only':'Nerdio + Recast (Better Together)'}</h2>
+              <div class="inline-flex rounded-full bg-[#0b152f] ring-1 ring-white/10 p-1" role="tablist" aria-label="ROI Mode">
+                ${roiModeBtn('recast','Recast Only')}
+                ${roiModeBtn('combined','Nerdio + Recast')}
+              </div>
             </div>
-            <div class="mt-3 flex gap-2">
-              <button type="button" class="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-slate-900 focus-ring inline-flex items-center gap-2" data-action="copy">
-                <i data-lucide="clipboard" class="w-4 h-4"></i>${STATE.copied?'Copied!':'Copy pilot summary'}
-              </button>
-              <button type="button" class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm focus-ring" data-action="tab" data-id="approach">Back to click-through</button>
+
+            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4" aria-label="Top KPIs">
+              ${kpi('Minutes saved per user / mo','timer', `${fmtNumber(t.endUserMinsPerUser)} min`, slider('endUserMinsPerUser',0,30,1,t.endUserMinsPerUser))}
+              ${kpi('Packaging hours avoided / app','scissors', `${fmtNumber(t.pkgHoursPerApp)} hrs`, slider('pkgHoursPerApp',3,12,0.5,t.pkgHoursPerApp))}
+              ${kpi('Patch-compliance target','shield-check', `${fmtNumber(t.patchPct)} %`, slider('patchPct',85,100,1,t.patchPct))}
+              ${kpi('Azure cost reduction (autoscale)','trending-down', `${fmtNumber(t.azureSavePct)} %`, slider('azureSavePct',0,55,1,t.azureSavePct, STATE.roiMode==='combined'))}
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <section class="sub p-4" aria-label="Inputs">
+                <h3 class="font-semibold text-sm flex items-center gap-2"><i data-lucide="sliders-horizontal" class="w-4 h-4" aria-hidden="true"></i>Inputs</h3>
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  ${numberInput('Users', 'users', t.users, 0, 200000, 1, 'Total employees/desktops')}
+                  ${numberInput('Apps to package', 'apps', t.apps, 0, 5000, 1, 'Unique applications')}
+                  ${moneyInput('Avg loaded cost / hour', 'costPerHour', t.costPerHour, 0, 500, 1, 'Fully burdened IT cost')}
+                  ${moneyInput('Azure infra cost / year', 'azureInfraCostYr', t.azureInfraCostYr, 0, 100000000, 1000, 'Compute + storage (eligible)')}
+                  ${moneyInput('Recast subscription / year', 'subCostRecastYr', t.subCostRecastYr, 0, 5000000, 1000, 'List or your price')}
+                  ${moneyInput('Nerdio subscription / year', 'subCostNerdioYr', t.subCostNerdioYr, 0, 5000000, 1000, 'List or your price', STATE.roiMode==='combined')}
+                </div>
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  ${kpiSmall('Nerdio admin hours saved / 100 desktops / mo','clock-8', `${fmtNumber(t.nerdioHrsPer100)} hrs`, slider('nerdioHrsPer100',10,40,1,t.nerdioHrsPer100, STATE.roiMode==='combined'))}
+                  ${kpiSmall('Onboarding target (desktop + apps)','hourglass', `${fmtNumber(t.onboardingMins)} mins`, slider('onboardingMins',30,180,5,t.onboardingMins))}
+                </div>
+                <p class="mt-3 text-[11px] text-slate-400">Tip: Toggle “Recast Only” to isolate app packaging/patching value, then compare to “Nerdio + Recast”.</p>
+              </section>
+
+              <section class="sub p-4 lg:col-span-2" aria-label="Outputs">
+                <h3 class="font-semibold text-sm flex items-center gap-2"><i data-lucide="calculator" class="w-4 h-4" aria-hidden="true"></i>Outputs</h3>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  ${outKpi('Hours saved / month (IT + end-users)','clock', fmtNumber(calc.hoursMonth,0), 'hrs')}
+                  ${outKpi('Labor savings / year','badge-dollar-sign', fmtCurrency(calc.laborYr))}
+                  ${outKpi('Azure infra savings / year', 'server', STATE.roiMode==='combined'?fmtCurrency(calc.infraYr):'—')}
+                  ${outKpi('Total savings / year', 'piggy-bank', fmtCurrency(calc.totalSaveYr))}
+                </div>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  ${outKpi('Equivalent IT FTEs freed', 'users', fmtNumber(calc.fte,2))}
+                  ${outKpi('Annual subscription cost', 'receipt', fmtCurrency(calc.subCostYr))}
+                  ${outKpi('ROI (net)', 'trending-up', calc.subCostYr>0?`${fmtNumber(calc.roiPct,0)} %`:'—')}
+                </div>
+                <div class="mt-4 rounded-lg border border-white/10 bg-[#0b1328] p-3">
+                  <h4 class="text-sm font-semibold mb-2">Assumptions & Method</h4>
+                  <ul class="text-[12px] text-slate-300 space-y-1">
+                    <li>Recast app packaging time avoided: <span class="font-medium">${fmtNumber(t.pkgHoursPerApp)} hrs / app</span> × <span class="font-medium">${fmtNumber(t.apps)} apps</span>.</li>
+                    <li>End-user productivity: <span class="font-medium">${fmtNumber(t.endUserMinsPerUser)} min / user / mo</span> → converted to hours.</li>
+                    ${STATE.roiMode==='combined' ? `
+                    <li>Nerdio admin time avoided: <span class="font-medium">${fmtNumber(t.nerdioHrsPer100)} hrs / 100 desktops / mo</span> × ${fmtNumber(t.users)} users.</li>
+                    <li>Azure autoscale savings: <span class="font-medium">${fmtNumber(t.azureSavePct)}%</span> of annual infra cost.</li>`:''}
+                    <li>Labor savings uses loaded rate: <span class="font-medium">${fmtCurrency(t.costPerHour)}</span>.</li>
+                    <li>FTEs = total hours saved per year ÷ 2080.</li>
+                  </ul>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-slate-900 focus-ring inline-flex items-center gap-2" data-action="copy">
+                    <i data-lucide="clipboard" class="w-4 h-4" aria-hidden="true"></i>${STATE.copied?'Copied!':'Copy summary'}
+                  </button>
+                  <button type="button" class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm focus-ring" data-action="tab" data-id="approach">Back to click-through</button>
+                </div>
+              </section>
+            </div>
+
+            <div class="mt-4 sub p-4 text-[11px] text-slate-400" role="note" aria-label="Disclaimers">
+              <div class="flex items-center gap-2 text-slate-300 font-medium mb-1"><i data-lucide="info" class="w-3.5 h-3.5" aria-hidden="true"></i>Footnotes & Truth-Check</div>
+              <ul class="list-disc pl-5 space-y-1">
+                <li>Azure autoscale savings of up to ~55% are reported by customers using right-sizing and autoscale on idle host pools; your mileage will vary with usage patterns and reserved instances.</li>
+                <li>App packaging time savings of ~5–10 hours per app reflect common field data; complex apps may exceed this range.</li>
+                <li>Patch-compliance targets (>95%) reduce risk exposure but do not directly convert to dollar savings here; add your incident/penalty data for risk-adjusted ROI.</li>
+                <li>All values are illustrative; replace inputs with your data and export for audit review.</li>
+              </ul>
             </div>
           </div>
         </section>
       `;
     }
-    function metric(title,icon,value,controlHtml){
+
+    function roiModeBtn(mode,label){
+      const active=STATE.roiMode===mode;
+      return `<button type="button" role="tab" aria-selected="${active}" class="${active?'bg-yellow-400 text-slate-900':'text-slate-200 hover:bg-white/5'} px-3 py-1.5 rounded-full text-sm focus-ring" data-action="roi-mode" data-id="${mode}">${label}</button>`;
+    }
+
+    function kpi(title,icon,value,controlHtml){
       return `
         <div class="sub p-3">
           <div class="flex items-center justify-between">
@@ -338,21 +412,154 @@
               <div class="text-[12px] text-slate-300">${title}</div>
               <div class="text-xl font-semibold">${value}</div>
             </div>
-            <i data-lucide="${icon}" class="w-5 h-5 text-sky-300"></i>
+            <i data-lucide="${icon}" class="w-5 h-5 text-sky-300" aria-hidden="true"></i>
           </div>
           ${controlHtml||''}
         </div>
       `;
     }
-    function range(key,min,max,val){
+    function kpiSmall(title,icon,value,controlHtml){
       return `
-        <label class="mt-2 flex items-center gap-2 text-xs">
+        <div class="rounded-lg border border-white/10 bg-[#0c1733] p-3">
+          <div class="flex items-center justify-between">
+            <div class="text-[12px] text-slate-300">${title}</div>
+            <i data-lucide="${icon}" class="w-4 h-4 text-sky-300" aria-hidden="true"></i>
+          </div>
+          <div class="mt-1 text-lg font-semibold">${value}</div>
+          ${controlHtml||''}
+        </div>
+      `;
+    }
+    function slider(key,min,max,step,val,enabled=true){
+      return `
+        <label class="mt-2 flex items-center gap-2 text-xs ${enabled?'':'opacity-50'}">
           <span class="text-slate-400">Target</span>
-          <input type="range" min="${min}" max="${max}" value="${val}" data-action="range" data-key="${key}" class="w-full accent-yellow-400">
-          <output class="w-10 text-right" aria-live="polite">${val}</output>
+          <input ${enabled?'':'disabled'} type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-action="range" data-key="${key}" class="w-full accent-yellow-400" aria-label="${key}">
+          <output class="w-12 text-right" aria-live="polite">${val}</output>
         </label>
       `;
     }
+    function numberInput(label,key,value,min,max,step,help){
+      return `
+        <label class="block">
+          <span class="text-[12px] text-slate-300">${label}</span>
+          <input type="number" inputmode="numeric" class="mt-1 w-full rounded-lg bg-white/5 px-3 py-2 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                 value="${value}" min="${min}" max="${max}" step="${step}" data-action="number" data-key="${key}" aria-describedby="${key}-help">
+          <span id="${key}-help" class="text-[11px] text-slate-400">${help||''}</span>
+        </label>
+      `;
+    }
+    function moneyInput(label,key,value,min,max,step,help,enabled=true){
+      return `
+        <label class="block ${enabled?'':'opacity-50'}">
+          <span class="text-[12px] text-slate-300">${label}</span>
+          <div class="mt-1 relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+            <input ${enabled?'':'disabled'} type="number" inputmode="numeric" class="w-full rounded-lg bg-white/5 pl-7 pr-3 py-2 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                   value="${value}" min="${min}" max="${max}" step="${step}" data-action="number" data-key="${key}" aria-describedby="${key}-help">
+          </div>
+          <span id="${key}-help" class="text-[11px] text-slate-400">${help||''}</span>
+        </label>
+      `;
+    }
+    function outKpi(title,icon,value,unit){
+      return `
+        <div class="sub p-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-[12px] text-slate-300">${title}</div>
+              <div class="text-xl font-semibold">${value}${unit?` <span class="text-sm font-normal text-slate-400">${unit}</span>`:''}</div>
+            </div>
+            <i data-lucide="${icon}" class="w-5 h-5 text-emerald-300" aria-hidden="true"></i>
+          </div>
+        </div>
+      `;
+    }
+
+    function computeROI(){
+      const t = sanitizeInputs(STATE.inputs);
+      const endUserHoursMonth = (t.users * t.endUserMinsPerUser) / 60;
+      const recastPkgHoursMonth = t.apps * t.pkgHoursPerApp;
+      const nerdioHoursMonth = STATE.roiMode==='combined' ? (t.users/100) * t.nerdioHrsPer100 : 0;
+      const totalHoursMonth = Math.max(0, endUserHoursMonth + recastPkgHoursMonth + nerdioHoursMonth);
+
+      const laborYr = totalHoursMonth * t.costPerHour * 12;
+
+      const infraYr = STATE.roiMode==='combined'
+        ? (t.azureInfraCostYr * (t.azureSavePct/100))
+        : 0;
+
+      const subCostYr = STATE.roiMode==='combined'
+        ? (t.subCostRecastYr + t.subCostNerdioYr)
+        : t.subCostRecastYr;
+
+      const totalSaveYr = laborYr + infraYr;
+      const net = totalSaveYr - subCostYr;
+      const roiPct = subCostYr>0 ? (net / subCostYr) * 100 : 0;
+      const fte = (totalHoursMonth * 12) / 2080;
+
+      return {
+        hoursMonth: totalHoursMonth,
+        laborYr,
+        infraYr,
+        totalSaveYr,
+        subCostYr,
+        roiPct,
+        fte,
+        summary: buildSummary(t, {totalHoursMonth, laborYr, infraYr, totalSaveYr, subCostYr, roiPct, fte})
+      };
+    }
+
+    function buildSummary(t, c){
+      const modeTitle = STATE.roiMode==='combined' ? 'Nerdio + Recast (Better Together)' : 'Recast Only';
+      const lines = [
+        `ROI Summary — ${modeTitle}`,
+        '',
+        'Assumptions',
+        `Users: ${fmtNumber(t.users)} | Apps: ${fmtNumber(t.apps)} | Loaded cost/hr: ${fmtCurrency(t.costPerHour)}`,
+        `Packaging avoided/app: ${fmtNumber(t.pkgHoursPerApp)} hrs | End-user productivity: ${fmtNumber(t.endUserMinsPerUser)} min/user/mo`,
+        ...(STATE.roiMode==='combined' ? [
+          `Nerdio admin savings: ${fmtNumber(t.nerdioHrsPer100)} hrs / 100 desktops / mo`,
+          `Azure autoscale savings: ${fmtNumber(t.azureSavePct)}% of annual infra ($${fmtNumber(t.azureInfraCostYr,0)})`
+        ] : []),
+        '',
+        'Results',
+        `Hours saved / month: ${fmtNumber(c.totalHoursMonth,0)} hrs`,
+        `Labor savings / year: ${fmtCurrency(c.laborYr)}`,
+        ...(STATE.roiMode==='combined' ? [`Azure infra savings / year: ${fmtCurrency(c.infraYr)}`] : []),
+        `Total savings / year: ${fmtCurrency(c.totalSaveYr)}`,
+        `Annual subscription cost: ${fmtCurrency(c.subCostYr)}`,
+        `ROI (net): ${fmtNumber(c.roiPct,0)}%`,
+        `Equivalent IT FTEs freed: ${fmtNumber(c.fte,2)} FTEs`,
+        '',
+        'Notes',
+        `Targets: Onboarding ≤ ${fmtNumber(t.onboardingMins)} mins, Patch compliance ≥ ${fmtNumber(t.patchPct)}%.`,
+        'All values illustrative. Replace with your data.'
+      ];
+      return lines.join('\n');
+    }
+
+    function sanitizeInputs(inp){
+      const o = {...inp};
+      const keys = Object.keys(o);
+      keys.forEach(k=>{
+        let v = Number(o[k]);
+        if (Number.isNaN(v)) v = 0;
+        if (v < 0) v = 0;
+        o[k] = v;
+      });
+      o.patchPct = Math.min(100, Math.max(0, o.patchPct));
+      o.azureSavePct = Math.min(55, Math.max(0, o.azureSavePct));
+      return o;
+    }
+
+    function fmtNumber(n,dec=0){
+      try { return Number(n).toLocaleString(undefined,{maximumFractionDigits:dec,minimumFractionDigits:dec}); } catch { return String(n); }
+    }
+    function fmtCurrency(n){
+      try { return Number(n).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0}); } catch { return '$'+n; }
+    }
+
     function buildNerdio(){
       const a=document.getElementById('poolA');
       const b=document.getElementById('poolB');
@@ -383,6 +590,7 @@
       }
       return d;
     }
+
     function buildRecast(){
       let base=0;
       CATALOG.forEach(section=>{
@@ -398,6 +606,7 @@
           ring.title=itm.name;
           ring.setAttribute('role','img');
           ring.setAttribute('aria-label',itm.name);
+          mount.appendChild(wrap);
           wrap.appendChild(ring);
           if(STATE.showLabelsRecast){
             const label=document.createElement('span');
@@ -405,7 +614,6 @@
             label.textContent=itm.name;
             wrap.appendChild(label);
           }
-          mount.appendChild(wrap);
         });
         base+=0.25;
       });
@@ -432,6 +640,7 @@
         container.appendChild(d);
       }
     }
+
     const CATALOG=[
       {title:'CORE PRODUCTIVITY',id:'cat-core',items:[
         logo('Microsoft Word','W','#185ABD'),
@@ -477,6 +686,7 @@
         logo('ZoomIt / Sysinternals','ZI','#58595B')
       ]}
     ];
+
     function logo(name,letter,color){ return { name, svg: mark(letter,color) }; }
     function mark(letter,color){
       return `
@@ -500,6 +710,7 @@
       return { name, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" aria-label="${name}"><rect x="1.5" y="1.5" width="45" height="45" rx="12" fill="#111827" stroke="rgba(255,255,255,.15)"/><path d="M24 12c5 7-2 9 3 14 3 3 2 9-3 11-5-2-6-8-3-11 5-5-3-7 3-14z" fill="${c1}"/><circle cx="26" cy="28" r="4" fill="${c2}"/></svg>` };
     }
     function shade(hex,m){ const c=hex.replace('#',''); const n=[0,1,2].map(i=>parseInt(c.slice(i*2,i*2+2),16)); const s=n.map(v=>Math.max(0,Math.min(255,Math.round(v*m)))); return '#'+s.map(v=>v.toString(16).padStart(2,'0')).join(''); }
+
     function attachEvents(){
       const root=document.getElementById('app');
       root.querySelectorAll('[data-action="tab"]').forEach(b=>b.addEventListener('click',e=>{ STATE.tab=e.currentTarget.getAttribute('data-id'); render(); }));
@@ -508,29 +719,26 @@
       root.querySelector('[data-action="start"]')?.addEventListener('click', startAll);
       root.querySelector('[data-action="reset"]')?.addEventListener('click', resetAll);
       root.querySelectorAll('[data-action="range"]').forEach(r=>r.addEventListener('input',e=>{
-        const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value)||0; STATE.targets[key]=v; render();
+        const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value)||0; STATE.inputs[key]=v; render();
       }));
+      root.querySelectorAll('[data-action="number"]').forEach(n=>n.addEventListener('input',e=>{
+        const key=e.currentTarget.getAttribute('data-key'); const v=Number(e.target.value); STATE.inputs[key]=Number.isFinite(v)?v:STATE.inputs[key]; // keep last good
+        // Live update outputs without full re-render for performance
+        const out = computeROI();
+        // No partial DOM patching here to keep code simple; re-render for consistency
+        render();
+      }));
+      root.querySelector('[data-action="roi-mode"]')?.addEventListener('click',e=>{ STATE.roiMode=e.currentTarget.getAttribute('data-id'); render(); });
+      root.querySelectorAll('[data-action="roi-mode"]').forEach(b=>b.addEventListener('click',e=>{ STATE.roiMode=e.currentTarget.getAttribute('data-id'); render(); }));
       root.querySelector('[data-action="copy"]')?.addEventListener('click', async ()=>{
-        const t=STATE.targets;
-        const body =
-`Nerdio + Recast — Pilot Targets
-
-Positioning
-Nerdio orchestrates Cloud PCs/AVD/Intune. Recast controls the apps. Together: one governed, identity-driven workspace—desktops and applications provisioned, patched, and ready in a single flow.
-
-Targets
-- Under 1 hour onboarding (desktop + apps)
-- Packaging avoided: ${t.pkgHrsLow}–${t.pkgHrsHigh} hrs per app
-- Patch compliance goal: > ${t.patchPct}%
-- Azure cost reduction via autoscale: ~ ${t.azureSavePct}%
-
-Measure weekly and adjust rings/policies accordingly.`;
-        try { await navigator.clipboard.writeText(body); } catch {
-          const ta=document.createElement('textarea'); ta.value=body; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        const calc = computeROI();
+        try { await navigator.clipboard.writeText(calc.summary); } catch {
+          const ta=document.createElement('textarea'); ta.value=calc.summary; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
         }
         STATE.copied=true; render(); setTimeout(()=>{ STATE.copied=false; render(); }, 1200);
       });
     }
+
     function startAll(){
       const nerdio=document.getElementById('nerdioCard');
       const recast=document.getElementById('recastCard');
@@ -545,6 +753,7 @@ Measure weekly and adjust rings/policies accordingly.`;
         setTimeout(()=>{ [nerdio,recast].forEach(c=>c && c.classList.remove('run')); }, 6000);
       }
     }
+
     function resetAll(){
       const nerdio=document.getElementById('nerdioCard');
       const recast=document.getElementById('recastCard');
@@ -557,6 +766,7 @@ Measure weekly and adjust rings/policies accordingly.`;
       success && success.classList.add('hidden');
       buildNerdio(); buildRecast();
     }
+
     document.addEventListener('DOMContentLoaded', render);
   </script>
 </body>
